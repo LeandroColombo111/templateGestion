@@ -11,9 +11,9 @@ export default function AlertsPage() {
   const { alerts, updateStatus } = useDemoAlerts();
   const [status, setStatus] = useState("");
   const [severity, setSeverity] = useState("");
-  const emailMap = new Map(demoEmails.map((email) => [email.id, email]));
 
   const decorated = useMemo(() => {
+    const emailMap = new Map(demoEmails.map((email) => [email.id, email]));
     return alerts
       .map((alert) => ({
         ...alert,
@@ -24,7 +24,7 @@ export default function AlertsPage() {
       .filter((alert) => (status ? alert.status === status : true))
       .filter((alert) => (severity ? alert.severity === severity : true))
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }, [alerts, emailMap, severity, status]);
+  }, [alerts, severity, status]);
 
   return (
     <div className="space-y-6">

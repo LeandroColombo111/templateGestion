@@ -121,7 +121,7 @@ export function RulesForm({
           </div>
           <div>
             <label className="text-xs uppercase tracking-wide text-slate-400">
-              Risk score >=
+              Risk score {">="}
             </label>
             <Input
               name="riskScoreGte"
