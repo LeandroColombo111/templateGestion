@@ -4,36 +4,42 @@ import { useMemo, useState } from "react";
 import { InboxFilters, type InboxFilterState } from "../../../components/inbox-filters";
 import { EmailTable } from "../../../components/email-table";
 import { demoEmails } from "../../../lib/demo-data";
+import { useVerdictOverrides } from "../../../lib/demo-store";
 
 const initialFilters: InboxFilterState = {
   verdict: "",
   domain: "",
-  start: "",
-  end: ""
+  search: ""
 };
 
 export default function InboxPage() {
   const [filters, setFilters] = useState<InboxFilterState>(initialFilters);
+  const { overrides } = useVerdictOverrides();
 
   const filtered = useMemo(() => {
     const results = demoEmails.filter((email) => {
-      if (filters.verdict && email.scanResult.verdict !== filters.verdict) {
+      const effectiveVerdict = overrides[email.id] ?? email.scanResult.verdict;
+      if (filters.verdict && effectiveVerdict !== filters.verdict) {
         return false;
       }
       if (filters.domain) {
-        const domain = email.from_email.split("@")[1] ?? "";
+        const domain = (email.fromEmail.split("@")[1] ?? "").toLowerCase();
         if (!domain.includes(filters.domain.toLowerCase())) return false;
       }
-      if (filters.start) {
-        if (email.date < new Date(filters.start)) return false;
-      }
-      if (filters.end) {
-        if (email.date > new Date(filters.end)) return false;
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        const haystack = `${email.fromName} ${email.fromEmail} ${email.subject}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
       }
       return true;
     });
-    return results.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [filters]);
+    return results
+      .map((email) => ({
+        ...email,
+        effectiveVerdict: overrides[email.id] ?? email.scanResult.verdict
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [filters, overrides]);
 
   return (
     <div className="space-y-6">
@@ -43,7 +49,7 @@ export default function InboxPage() {
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Email triage</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Filter by verdict, sender domain, or date range.
+          Filter by verdict, sender domain, or search text.
         </p>
       </div>
 

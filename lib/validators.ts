@@ -11,8 +11,7 @@ export const ruleSchema = z.object({
   hasExeAttachment: z.coerce.boolean().optional(),
   urgentLanguage: z.coerce.boolean().optional(),
   actionCreateAlert: z.coerce.boolean().optional(),
-  actionVerdictOverride: z.enum(["SAFE", "SUSPICIOUS", "DANGEROUS"]).optional(),
-  actionTag: z.string().optional()
+  actionVerdictOverride: z.enum(["SAFE", "SUSPICIOUS", "DANGEROUS"]).optional()
 });
 
 export type RuleFormInput = z.infer<typeof ruleSchema>;

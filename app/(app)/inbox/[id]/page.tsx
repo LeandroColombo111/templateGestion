@@ -3,11 +3,37 @@ import { Badge } from "../../../../components/ui/badge";
 import { Card } from "../../../../components/ui/card";
 import { format } from "date-fns";
 import { demoEmails, getEmailById } from "../../../../lib/demo-data";
+import { urgentKeywords } from "../../../../lib/scanner";
+import { EmailVerdictPanel } from "../../../../components/email-verdict";
 
 export const dynamic = "force-static";
 
 export function generateStaticParams() {
   return demoEmails.map((email) => ({ id: email.id }));
+}
+
+function highlightText(text: string, terms: string[]) {
+  if (!terms.length) return text;
+  const escaped = terms
+    .filter(Boolean)
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!escaped.length) return text;
+  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, index) => {
+    const isMatch = regex.test(part);
+    regex.lastIndex = 0;
+    return isMatch ? (
+      <mark
+        key={`${part}-${index}`}
+        className="rounded bg-amber-500/30 px-1 text-amber-200"
+      >
+        {part}
+      </mark>
+    ) : (
+      <span key={`${part}-${index}`}>{part}</span>
+    );
+  });
 }
 
 export default function EmailDetailPage({
@@ -21,7 +47,11 @@ export default function EmailDetailPage({
     notFound();
   }
 
-  const reasons = email.scanResult.reasons_json ?? [];
+  const reasons = email.scanResult.reasons ?? [];
+  const suspiciousDomains = email.links
+    .filter((link) => link.isSuspicious)
+    .map((link) => link.domain);
+  const highlightTerms = Array.from(new Set([...urgentKeywords, ...suspiciousDomains]));
 
   return (
     <div className="space-y-6">
@@ -31,35 +61,24 @@ export default function EmailDetailPage({
         </p>
         <h1 className="mt-2 text-3xl font-semibold">{email.subject}</h1>
         <p className="mt-2 text-sm text-slate-400">
-          {email.from_name} · {email.from_email} · {format(email.date, "PPP")}
+          {email.fromName} - {email.fromEmail} - {format(email.date, "PPP")}
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <Card className="border-slate-800 bg-slate-900/60 p-6">
           <h2 className="text-lg font-semibold">Message body</h2>
-          <pre className="mt-4 whitespace-pre-wrap text-sm text-slate-200">
-            {email.body_text}
-          </pre>
+          <p className="mt-4 whitespace-pre-wrap text-sm text-slate-200">
+            {highlightText(email.bodyText, highlightTerms)}
+          </p>
         </Card>
         <Card className="border-slate-800 bg-slate-900/60 p-6">
           <h2 className="text-lg font-semibold">Scan verdict</h2>
-          <div className="mt-3 flex items-center gap-3">
-            <Badge
-              className={
-                email.scanResult.verdict === "DANGEROUS"
-                  ? "bg-rose-500/20 text-rose-200"
-                  : email.scanResult.verdict === "SUSPICIOUS"
-                    ? "bg-amber-500/20 text-amber-200"
-                    : "bg-emerald-500/20 text-emerald-200"
-              }
-            >
-              {email.scanResult.verdict}
-            </Badge>
-            <p className="text-sm text-slate-400">
-              Risk score: {email.scanResult.risk_score}
-            </p>
-          </div>
+          <EmailVerdictPanel
+            emailId={email.id}
+            baseVerdict={email.scanResult.verdict}
+            riskScore={email.scanResult.riskScore}
+          />
           <div className="mt-4 space-y-2">
             {reasons.length ? (
               reasons.map((reason, index) => (
@@ -88,9 +107,11 @@ export default function EmailDetailPage({
                   key={link.id}
                   className="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
                 >
-                  <p className="text-sm text-slate-200">{link.url}</p>
+                  <p className="text-sm text-slate-200">
+                    {highlightText(link.url, suspiciousDomains)}
+                  </p>
                   <p className="text-xs text-slate-400">{link.domain}</p>
-                  {link.is_suspicious ? (
+                  {link.isSuspicious ? (
                     <Badge className="mt-2 bg-amber-500/20 text-amber-200">
                       {link.reason ?? "Suspicious"}
                     </Badge>
@@ -119,9 +140,9 @@ export default function EmailDetailPage({
                     {attachment.filename}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {attachment.mime_type} · {attachment.size_bytes} bytes
+                    {attachment.mimeType} - {attachment.sizeBytes} bytes
                   </p>
-                  {attachment.is_dangerous ? (
+                  {attachment.isDangerous ? (
                     <Badge className="mt-2 bg-rose-500/20 text-rose-200">
                       {attachment.reason ?? "Dangerous"}
                     </Badge>

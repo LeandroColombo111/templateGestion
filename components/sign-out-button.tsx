@@ -4,11 +4,7 @@ import { useRouter } from "next/navigation";
 import { clearStoredUser } from "../lib/demo-auth";
 import { Button } from "./ui/button";
 
-export function SignOutButton({
-  onSignOut
-}: {
-  onSignOut?: () => void;
-}) {
+export function SignOutButton() {
   const router = useRouter();
 
   return (
@@ -17,8 +13,7 @@ export function SignOutButton({
       className="text-slate-200 hover:text-white"
       onClick={() => {
         clearStoredUser();
-        onSignOut?.();
-        router.replace("/");
+        router.replace("/login");
       }}
     >
       Sign out

@@ -6,13 +6,13 @@ const examples = [
     title: "Fake bank alert",
     signal: "Lookalike domain + urgent language",
     detail:
-      "Sender uses acmeb4nk.com and asks to verify immediately."
+      "Sender uses acmeb4nk.com and asks you to verify immediately."
   },
   {
     title: "Invoice scam",
     signal: "Macro-enabled attachment",
     detail:
-      "Invoice_43922.docm includes macros and unfamiliar sender."
+      "Invoice_43922.docm includes macros and comes from cloudblll.io."
   },
   {
     title: "CEO fraud",

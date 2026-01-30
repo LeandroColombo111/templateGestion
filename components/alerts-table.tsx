@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { format } from "date-fns";
 
@@ -14,7 +15,7 @@ export function AlertsTable({
     message: string;
     severity: string;
     status: string;
-    created_at: Date;
+    createdAt: Date;
     email: { subject: string };
   }[];
   onStatusChange: (id: string, status: "OPEN" | "ACK" | "RESOLVED") => void;
@@ -27,7 +28,7 @@ export function AlertsTable({
           <TableHeader>Severity</TableHeader>
           <TableHeader>Status</TableHeader>
           <TableHeader>Created</TableHeader>
-          <TableHeader>Action</TableHeader>
+          <TableHeader>Actions</TableHeader>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -57,24 +58,27 @@ export function AlertsTable({
               </Badge>
             </TableCell>
             <TableCell className="text-xs text-slate-400">
-              {format(alert.created_at, "PPP")}
+              {format(alert.createdAt, "PPP")}
             </TableCell>
             <TableCell>
-              <select
-                name="status"
-                value={alert.status}
-                onChange={(event) =>
-                  onStatusChange(
-                    alert.id,
-                    event.target.value as "OPEN" | "ACK" | "RESOLVED"
-                  )
-                }
-                className="h-9 rounded-lg border border-slate-700 bg-slate-950/60 px-2 text-xs text-slate-100"
-              >
-                <option value="OPEN">Open</option>
-                <option value="ACK">Ack</option>
-                <option value="RESOLVED">Resolved</option>
-              </select>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  onClick={() => onStatusChange(alert.id, "ACK")}
+                >
+                  Ack
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onStatusChange(alert.id, "RESOLVED")}
+                >
+                  Resolve
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

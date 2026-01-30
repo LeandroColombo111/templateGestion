@@ -7,7 +7,7 @@ import { Input } from "./ui/input";
 import { Select } from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
 import { Card } from "./ui/card";
-import type { RuleDefinition } from "../services/rulesEngine";
+import type { RuleDefinition } from "../types";
 
 const initialState: RuleFormInput = {
   name: "",
@@ -58,8 +58,7 @@ export function RulesForm({
             message: "Triggered by custom rule conditions."
           }
         : undefined,
-      verdictOverride: parsed.data.actionVerdictOverride,
-      addTag: parsed.data.actionTag || undefined
+      verdictOverride: parsed.data.actionVerdictOverride
     };
 
     onCreate({
@@ -67,9 +66,9 @@ export function RulesForm({
       name: parsed.data.name,
       enabled: parsed.data.enabled,
       severity: parsed.data.severity,
-      condition_json: condition,
-      action_json: action,
-      created_at: new Date().toISOString()
+      condition,
+      action,
+      createdAt: new Date().toISOString()
     });
 
     setForm(initialState);
@@ -186,7 +185,7 @@ export function RulesForm({
           </label>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <label className="flex items-center gap-2 text-sm text-slate-200">
             <Checkbox
               checked={Boolean(form.actionCreateAlert ?? true)}
@@ -215,17 +214,6 @@ export function RulesForm({
               <option value="SUSPICIOUS">Suspicious</option>
               <option value="DANGEROUS">Dangerous</option>
             </Select>
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-wide text-slate-400">
-              Tag
-            </label>
-            <Input
-              name="actionTag"
-              placeholder="CEO_FRAUD"
-              value={form.actionTag ?? ""}
-              onChange={(event) => handleChange("actionTag", event.target.value)}
-            />
           </div>
         </div>
 

@@ -18,3 +18,7 @@ body {
   background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.15) 1px, transparent 0);
   background-size: 28px 28px;
 }
+
+mark {
+  @apply rounded bg-amber-500/30 px-1 text-amber-200;
+}

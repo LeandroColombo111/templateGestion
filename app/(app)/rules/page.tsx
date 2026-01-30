@@ -5,10 +5,22 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { useDemoRules } from "../../../lib/demo-store";
+import { runRulesOnInbox, useDemoAlerts, useDemoRules, useVerdictOverrides } from "../../../lib/demo-store";
 
 export default function RulesPage() {
   const { rules, createRule, toggleRule, deleteRule, stats } = useDemoRules();
+  const { addAlerts } = useDemoAlerts();
+  const { setOverride } = useVerdictOverrides();
+
+  function handleRunRules() {
+    const result = runRulesOnInbox(rules);
+    if (result.newAlerts.length) {
+      addAlerts(result.newAlerts);
+    }
+    Object.entries(result.verdictOverrides).forEach(([emailId, verdict]) => {
+      setOverride(emailId, verdict);
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -20,6 +32,15 @@ export default function RulesPage() {
         <p className="mt-2 text-sm text-slate-400">
           Compose conditional policies for triage and alerting.
         </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" onClick={handleRunRules}>
+          Run rules on inbox
+        </Button>
+        <span className="text-sm text-slate-400">
+          Applies enabled rules and generates alerts.
+        </span>
       </div>
 
       <RulesForm onCreate={createRule} />
@@ -47,7 +68,7 @@ export default function RulesPage() {
                   <TableCell>
                     <p className="font-medium text-slate-100">{rule.name}</p>
                     <p className="text-xs text-slate-500">
-                      {JSON.stringify(rule.condition_json)}
+                      {JSON.stringify(rule.condition)}
                     </p>
                   </TableCell>
                   <TableCell>

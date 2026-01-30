@@ -1,26 +1,22 @@
-export type DemoRole = "ADMIN" | "ANALYST";
+import type { DemoUser, Role } from "../types";
+import { readStorage, writeStorage, removeStorage } from "./storage";
 
-export type DemoUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: DemoRole;
-};
+export type DemoUserRecord = DemoUser & { password: string };
 
-export const demoUsers: Array<DemoUser & { password: string }> = [
+export const demoUsers: DemoUserRecord[] = [
   {
     id: "user-admin",
     name: "Demo Admin",
     email: "admin@demo.local",
     password: "demo1234",
-    role: "ADMIN"
+    role: "ADMIN" as Role
   },
   {
     id: "user-analyst",
     name: "Demo Analyst",
     email: "analyst@demo.local",
     password: "demo1234",
-    role: "ANALYST"
+    role: "ANALYST" as Role
   }
 ];
 
@@ -36,22 +32,13 @@ export function authenticate(email: string, password: string) {
 }
 
 export function getStoredUser(): DemoUser | null {
-  if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(storageKey);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as DemoUser;
-  } catch {
-    return null;
-  }
+  return readStorage<DemoUser | null>(storageKey, null);
 }
 
 export function storeUser(user: DemoUser) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey, JSON.stringify(user));
+  writeStorage(storageKey, user);
 }
 
 export function clearStoredUser() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(storageKey);
+  removeStorage(storageKey);
 }
