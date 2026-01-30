@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+}
+
+enum Verdict {
+  SAFE
+  SUSPICIOUS
+  DANGEROUS
+}
+
+enum Severity {
+  LOW
+  MED
+  HIGH
+}
+
+enum AlertStatus {
+  OPEN
+  ACK
+  RESOLVED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          Role     @default(ANALYST)
+  created_at    DateTime @default(now())
+}
+
+model EmailMessage {
+  id           String        @id @default(cuid())
+  from_name    String
+  from_email   String
+  subject      String
+  date         DateTime
+  body_text    String
+  body_html    String?
+  headers_json Json
+  received_at  DateTime      @default(now())
+  links        Link[]
+  attachments  Attachment[]
+  scanResult   ScanResult?
+  alerts       Alert[]
+
+  @@index([from_email])
+  @@index([date])
+}
+
+model Link {
+  id            String       @id @default(cuid())
+  email_id      String
+  url           String
+  domain        String
+  is_suspicious Boolean      @default(false)
+  reason        String?
+  email         EmailMessage @relation(fields: [email_id], references: [id])
+
+  @@index([email_id])
+}
+
+model Attachment {
+  id            String       @id @default(cuid())
+  email_id      String
+  filename      String
+  mime_type     String
+  size_bytes    Int
+  is_dangerous  Boolean      @default(false)
+  reason        String?
+  email         EmailMessage @relation(fields: [email_id], references: [id])
+
+  @@index([email_id])
+}
+
+model ScanResult {
+  id           String       @id @default(cuid())
+  email_id     String       @unique
+  risk_score   Int
+  verdict      Verdict
+  reasons_json Json
+  scanned_at   DateTime     @default(now())
+  email        EmailMessage @relation(fields: [email_id], references: [id])
+}
+
+model Rule {
+  id             String   @id @default(cuid())
+  name           String
+  enabled        Boolean  @default(true)
+  severity       Severity @default(LOW)
+  condition_json Json
+  action_json    Json
+  created_at     DateTime @default(now())
+}
+
+model Alert {
+  id         String       @id @default(cuid())
+  email_id   String
+  severity   Severity
+  title      String
+  message    String
+  status     AlertStatus  @default(OPEN)
+  created_at DateTime     @default(now())
+  email      EmailMessage @relation(fields: [email_id], references: [id])
+
+  @@index([email_id])
+  @@index([status])
+}
